@@ -1396,9 +1396,9 @@ const FormLabel = {
   <div class="text-2xl text-white font-bold">
   Rs. {{ Number(calculateStockValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
 </div>
-  <div class="text-sm text-violet-400/80 mt-1">
-    ({{ selectedItem.product.price }} - {{ selectedItem.product.discount }}% discount) × {{ selectedItem.quantity }}
-  </div>
+  <!-- <div class="text-sm text-violet-400/80 mt-1">
+    ({{selectedItem.product.price}}-({{selectedItem.product.price * selectedItem.product.discount/100}}) *{{ selectedItem.quantity }})
+  </div> -->
 </div>
           </div>
 
