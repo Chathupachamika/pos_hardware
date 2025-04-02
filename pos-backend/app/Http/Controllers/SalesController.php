@@ -53,21 +53,30 @@ class SalesController extends Controller
             ]);
 
             $total = 0;
+            $productDiscountsTotal = 0;
+
+            // Calculate subtotal and product discounts
             foreach ($request->get('items') as $item) {
-                $total += $item['price'] * $item['quantity'];
+                $itemSubtotal = $item['price'] * $item['quantity'];
+                $itemDiscountAmount = ($itemSubtotal * ($item['product_discount'] ?? 0)) / 100;
+                $productDiscountsTotal += $itemDiscountAmount;
+                $total += $itemSubtotal - $itemDiscountAmount;
             }
 
-            $discountAmount = ($total * $request->get('discount')) / 100;
-            $finalTotal = $total - $discountAmount;
+            // Calculate cart discount
+            $cartDiscountAmount = ($total * $request->get('discount')) / 100;
+            $finalTotal = $total - $cartDiscountAmount;
 
             $salesRecord = [
                 'customer_id' => $request->get('customer_id'),
                 'cashier_id' => $request->get('cashier_id'),
                 'payment_type' => $request->get('payment_type'),
                 'time' => now(),
-                'status' => 1, // Completed order
+                'status' => 1,
                 'amount' => $finalTotal,
-                'discount' => $request->get('discount'),
+                'cart_discount' => $request->get('discount'),
+                'product_discounts_total' => $productDiscountsTotal,
+                'total_discount_amount' => $productDiscountsTotal + $cartDiscountAmount
             ];
 
             DB::beginTransaction();

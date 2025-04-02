@@ -168,7 +168,6 @@ const addToOrder = (product) => {
   const existingItem = orderItems.value.find(item => item.id === product.id)
 
   if (existingItem) {
-    // Check if adding one more would exceed stock
     if (existingItem.quantity >= product.stock) {
       Swal.fire({
         title: 'Stock Limit Reached',
@@ -187,7 +186,8 @@ const addToOrder = (product) => {
         name: product.name,
         price: product.price,
         quantity: 1,
-        initialStock: product.stock // Store initial stock for reference
+        initialStock: product.stock,
+        productDiscount: 0 // Add default product discount
       })
     } else {
       Swal.fire({
@@ -204,9 +204,20 @@ const addToOrder = (product) => {
   showToast(`Added ${product.name} to order`)
 }
 
+const updateProductDiscount = (item, value) => {
+  if (value < 0) value = 0
+  if (value > 100) value = 100
+  item.productDiscount = value
+}
+
+const getItemTotal = (item) => {
+  const priceAfterDiscount = item.price * (1 - item.productDiscount / 100)
+  return priceAfterDiscount * item.quantity
+}
+
 const subtotal = computed(() => {
   return orderItems.value.reduce((total, item) => {
-    return total + (item.price * item.quantity)
+    return total + getItemTotal(item)
   }, 0)
 })
 
@@ -331,7 +342,8 @@ const completeOrder = async () => {
       items: orderItems.value.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        product_discount: item.productDiscount // Include product discount
       }))
     };
 
@@ -708,6 +720,24 @@ onMounted(async () => {
                       <div class="text-blue-400 text-xs font-bold">Rs. {{ item.price.toLocaleString() }}</div>
                     </div>
 
+                    <div class="flex items-center gap-2 mt-2">
+                      <div class="text-xs text-gray-400">Discount:</div>
+                      <div class="flex items-center gap-1">
+                        <input 
+                          type="number" 
+                          v-model.number="item.productDiscount" 
+                          @input="updateProductDiscount(item, item.productDiscount)"
+                          class="w-14 bg-gray-700/50 border border-gray-600/50 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-400/30 text-center"
+                          min="0"
+                          max="100"
+                        />
+                        <span class="text-xs text-gray-400">%</span>
+                      </div>
+                      <div class="text-xs text-gray-400">
+                        Price after discount: <span class="text-green-400">Rs. {{ (item.price * (1 - item.productDiscount / 100)).toLocaleString() }}</span>
+                      </div>
+                    </div>
+
                     <div class="flex justify-between items-center mt-3">
                       <div class="flex items-center gap-1 bg-gray-800/70 rounded-lg p-1">
                         <button @click.stop="updateQuantity(item, -1)"
@@ -723,7 +753,7 @@ onMounted(async () => {
                       </div>
 
                       <div class="text-gray-300 text-xs font-medium">
-                        Rs. {{ (item.price * item.quantity).toLocaleString() }}
+                        Rs. {{ getItemTotal(item).toLocaleString() }}
                       </div>
 
                       <button @click.stop="removeFromOrder(item.id)"
@@ -967,6 +997,7 @@ onMounted(async () => {
                   <th class="py-3 px-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Description</th>
                   <th class="py-3 px-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Unit Price</th>
                   <th class="py-3 px-4 text-center text-xs font-medium text-gray-600 uppercase tracking-wider">Quantity</th>
+                  <th class="py-3 px-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Discount</th>
                   <th class="py-3 px-4 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Amount</th>
                 </tr>
               </thead>
@@ -978,7 +1009,16 @@ onMounted(async () => {
                   </td>
                   <td class="py-4 px-4 text-right text-gray-800">Rs. {{ item.price.toLocaleString() }}</td>
                   <td class="py-4 px-4 text-center text-gray-800">{{ item.quantity }}</td>
-                  <td class="py-4 px-4 text-right font-medium text-gray-800">Rs. {{ (item.price * item.quantity).toLocaleString() }}</td>
+                  <td class="py-4 px-4 text-right text-gray-800">
+                    <template v-if="item.productDiscount > 0">
+                      <span class="text-red-600">-{{ item.productDiscount }}%</span>
+                      <div class="text-xs text-gray-500">
+                        (-Rs. {{ ((item.price * item.quantity * item.productDiscount) / 100).toLocaleString() }})
+                      </div>
+                    </template>
+                    <span v-else>-</span>
+                  </td>
+                  <td class="py-4 px-4 text-right font-medium text-gray-800">Rs. {{ getItemTotal(item).toLocaleString() }}</td>
                 </tr>
               </tbody>
             </table>
@@ -987,19 +1027,40 @@ onMounted(async () => {
           <!-- Summary -->
           <div class="mt-8 border-t border-gray-200 pt-8">
             <div class="flex justify-end">
-              <div class="w-64">
+              <div class="w-72">
                 <div class="space-y-2">
                   <div class="flex justify-between text-sm">
-                    <span class="text-gray-600">Subtotal</span>
+                    <span class="text-gray-600">Subtotal (Before Discounts)</span>
+                    <span class="text-gray-800 font-medium">Rs. {{ orderItems.reduce((total, item) => total + (item.price * item.quantity), 0).toLocaleString() }}</span>
+                  </div>
+                  
+                  <div class="flex justify-between text-sm" v-if="orderItems.some(item => item.productDiscount > 0)">
+                    <span class="text-gray-600">Product Discounts</span>
+                    <span class="text-red-600 font-medium">
+                      - Rs. {{ (orderItems.reduce((total, item) => total + (item.price * item.quantity * item.productDiscount / 100), 0)).toLocaleString() }}
+                    </span>
+                  </div>
+
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Subtotal (After Product Discounts)</span>
                     <span class="text-gray-800 font-medium">Rs. {{ subtotal.toLocaleString() }}</span>
                   </div>
+
                   <div v-if="applyDiscount" class="flex justify-between text-sm">
-                    <span class="text-gray-600">Discount ({{ customDiscountRate }}%)</span>
+                    <span class="text-gray-600">Cart Discount ({{ customDiscountRate }}%)</span>
                     <span class="text-red-600 font-medium">- Rs. {{ discount.toLocaleString() }}</span>
                   </div>
+
                   <div class="flex justify-between text-base font-bold border-t border-gray-300 pt-2 mt-2">
-                    <span class="text-gray-800">Total</span>
+                    <span class="text-gray-800">Final Total</span>
                     <span class="text-blue-600">Rs. {{ total.toLocaleString() }}</span>
+                  </div>
+
+                  <div class="text-xs text-gray-500 mt-2">
+                    Total Savings: Rs. {{ (
+                      orderItems.reduce((total, item) => total + (item.price * item.quantity * item.productDiscount / 100), 0) + 
+                      (applyDiscount ? discount : 0)
+                    ).toLocaleString() }}
                   </div>
                 </div>
               </div>
