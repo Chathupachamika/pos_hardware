@@ -298,7 +298,7 @@ const handleAddProduct = async () => {
             inventory_id: parseInt(newProduct.value.inventory_id),
             supplier_id: parseInt(newProduct.value.supplier_id),
             admin_id: parseInt(newProduct.value.admin_id),
-            quantity: inventoryData.quantity, // Use quantity from inventory
+            quantity: inventoryData.quantity, 
             calculate_length: newProduct.value.calculate_length // Include calculate_length
         }
 
