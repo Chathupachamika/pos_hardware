@@ -176,7 +176,7 @@ const fetchProducts = async () => {
                 calculate_length: product.calculate_length,
                 created_at: product.created_at,
                 updated_at: product.updated_at,
-                profit: profitValue.toFixed(2) // Include calculated profit value
+                profit: profitValue.toFixed(2) 
             }
         })
 
