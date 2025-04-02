@@ -19,7 +19,8 @@ import {
     FunnelIcon,
     ChevronDownIcon,
     ChevronUpIcon,
-    ArrowPathIcon
+    ArrowPathIcon,
+    ArrowDownTrayIcon
 } from '@heroicons/vue/24/outline'
 import Header from './Header.vue'
 import Sidebar from './Sidebar.vue'
@@ -742,6 +743,37 @@ const updateCalculateLength = async (productId, calculateLength) => {
     }
 };
 
+const openGRNDocument = async (product) => {
+    try {
+        // Fetch supplier details
+        const supplierResponse = await connection.get(`/suppliers/${product.supplier_id}`)
+        const supplierData = supplierResponse.data
+
+        // Combine product data with supplier details
+        grnProduct.value = {
+            ...product,
+            supplierDetails: {
+                name: supplierData.name,
+                email: supplierData.email,
+                contact: supplierData.contact
+            }
+        }
+        
+        // Generate GRN number using product ID
+        grnNumber.value = `GRN-${new Date().getFullYear()}-${String(product.id).padStart(5, '0')}`
+        showGRN.value = true
+    } catch (error) {
+        console.error('Error fetching supplier details:', error)
+        Swal.fire({
+            icon: "error", 
+            title: "Error!",
+            text: "Failed to fetch supplier details",
+            background: '#1e293b',
+            color: '#ffffff'
+        })
+    }
+}
+
 onMounted(() => {
     fetchProducts()
     restoreFormData() // Restore any saved form data
@@ -934,6 +966,11 @@ onUnmounted(() => {
                                                     class="text-rose-500 hover:text-rose-400 p-1.5 hover:bg-gray-700 rounded-full transition-colors"
                                                     title="Delete Product">
                                                     <TrashIcon class="w-5 h-5" />
+                                                </button>
+                                                <button @click="openGRNDocument(product)"
+                                                    class="text-yellow-400 hover:text-yellow-300 p-1.5 hover:bg-gray-700 rounded-full transition-colors"
+                                                    title="Download GRN">
+                                                    <ArrowDownTrayIcon class="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </td>
