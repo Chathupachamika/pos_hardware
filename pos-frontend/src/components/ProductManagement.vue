@@ -864,13 +864,7 @@ onUnmounted(() => {
                                             <component :is="getSortIcon('seller_price')" class="w-4 h-4" />
                                         </div>
                                     </th>
-                                    <th @click="toggleSort('profit')"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600/50 transition-colors">
-                                        <div class="flex items-center space-x-1">
-                                            <span>Profit</span>
-                                            <component :is="getSortIcon('profit')" class="w-4 h-4" />
-                                        </div>
-                                    </th>
+                                    
                                     <th @click="toggleSort('brand_name')"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-600/50 transition-colors">
                                         <div class="flex items-center space-x-1">
@@ -945,9 +939,7 @@ onUnmounted(() => {
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             ${{ Number(product.seller_price).toFixed(2) }}
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            ${{ Number(product.profit).toFixed(2) }}
-                                        </td>
+                                       
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <span
                                                 class="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
@@ -1006,7 +998,7 @@ onUnmounted(() => {
         </div>
 
         <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-3xl p-6 shadow-xl border border-gray-700/50 max-h-[90vh] overflow-auto"
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-[95%] p-6 shadow-xl border border-gray-700/50 h-[80vh] overflow-hidden"
                 @click.stop>
                 <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
                     <div class="flex items-center space-x-2">
@@ -1019,190 +1011,97 @@ onUnmounted(() => {
                     </button>
                 </div>
 
-                <form @submit.prevent="handleAddSubmit" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2 bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Basic
-                                Information</h3>
-
+                <form @submit.prevent="handleAddSubmit" class="space-y-4 h-full overflow-y-auto px-2">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Column 1 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider">Basic Information</h3>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Product Name</label>
                                 <input v-model="newProduct.name" @blur="markFieldAsTouched('name')" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.name && formErrors.name
-                                    }" required>
-                                <span v-if="touchedFields.name && formErrors.name" class="text-red-500 text-xs mt-1">{{
-                                    formErrors.name }}</span>
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
+                                    :class="{ 'border-red-500': touchedFields.name && formErrors.name }" required>
                             </div>
-
                             <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                                <textarea v-model="newProduct.description" @blur="markFieldAsTouched('description')"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.description && formErrors.description
-                                    }" required rows="3"></textarea>
-                                <span v-if="touchedFields.description && formErrors.description"
-                                    class="text-red-500 text-xs mt-1">{{ formErrors.description }}</span>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Brand Name</label>
+                                <input v-model="newProduct.brand_name" type="text"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Bar Code</label>
+                                <input v-model="newProduct.bar_code" type="text"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
                             </div>
                         </div>
 
-                        <div class="bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Pricing</h3>
-
+                        <!-- Column 2 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider">Pricing Details</h3>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Price</label>
-                                <input v-model="newProduct.price" @blur="markFieldAsTouched('price')" type="number"
-                                    step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.price && formErrors.price
-                                    }" required>
-                                <span v-if="touchedFields.price && formErrors.price"
-                                    class="text-red-500 text-xs mt-1">{{
-                                        formErrors.price }}</span>
+                                <input v-model="newProduct.price" type="number" step="0.01"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Price</label>
+                                <input v-model="newProduct.seller_price" type="number" step="0.01"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Tax (%)</label>
+                                <input v-model="newProduct.tax" type="number" step="0.01"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                        </div>
+
+                        <!-- Column 3 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider">Discounts</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Discount (%)</label>
+                                <input v-model="newProduct.discount" type="number" step="0.01"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Selling Discount (%)</label>
                                 <input v-model="newProduct.selling_discount" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    placeholder="0">
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
                             </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Tax</label>
-                                <input v-model="newProduct.tax" @blur="markFieldAsTouched('tax')" type="number"
-                                    step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.tax && formErrors.tax
-                                    }" required>
-                                <span v-if="touchedFields.tax && formErrors.tax" class="text-red-500 text-xs mt-1">{{
-                                    formErrors.tax }}</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Product Details
-                            </h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Size</label>
-                                <input v-model="newProduct.size" @blur="markFieldAsTouched('size')" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.size && formErrors.size
-                                    }" required>
-                                <span v-if="touchedFields.size && formErrors.size" class="text-red-500 text-xs mt-1">{{
-                                    formErrors.size }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Color</label>
-                                <input v-model="newProduct.color" @blur="markFieldAsTouched('color')" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.color && formErrors.color
-                                    }" required>
-                                <span v-if="touchedFields.color && formErrors.color"
-                                    class="text-red-500 text-xs mt-1">{{
-                                        formErrors.color }}</span>
-                            </div>
-                        </div>
-
-                        <div class="md:col-span-2 bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Additional
-                                Information
-                            </h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Bar Code</label>
-                                <input v-model="newProduct.bar_code" @blur="markFieldAsTouched('bar_code')" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.bar_code && formErrors.bar_code
-                                    }" required>
-                                <span v-if="touchedFields.bar_code && formErrors.bar_code"
-                                    class="text-red-500 text-xs mt-1">{{
-                                        formErrors.bar_code }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Brand Name</label>
-                                <input v-model="newProduct.brand_name" @blur="markFieldAsTouched('brand_name')"
-                                    type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.brand_name && formErrors.brand_name
-                                    }" required>
-                                <span v-if="touchedFields.brand_name && formErrors.brand_name"
-                                    class="text-red-500 text-xs mt-1">{{ formErrors.brand_name }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Inventory ID</label>
-                                <input v-model="newProduct.inventory_id" @blur="markFieldAsTouched('inventory_id')"
-                                    type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.inventory_id && formErrors.inventory_id
-                                    }" required>
-                                <span v-if="touchedFields.inventory_id && formErrors.inventory_id"
-                                    class="text-red-500 text-xs mt-1">{{ formErrors.inventory_id }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Price</label>
-                                <input v-model="newProduct.seller_price" @blur="markFieldAsTouched('seller_price')"
-                                    type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.seller_price && formErrors.seller_price
-                                    }" required>
-                                <span v-if="touchedFields.seller_price && formErrors.seller_price"
-                                    class="text-red-500 text-xs mt-1">{{ formErrors.seller_price }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Discount
-                                    (%)</label>
-                                <input v-model="newProduct.discount" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    placeholder="0">
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier ID</label>
-                                <input v-model="newProduct.supplier_id" @blur="markFieldAsTouched('supplier_id')"
-                                    type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.supplier_id && formErrors.supplier_id
-                                    }" required>
-                                <span v-if="touchedFields.supplier_id && formErrors.supplier_id"
-                                    class="text-red-500 text-xs mt-1">{{ formErrors.supplier_id }}</span>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Admin ID</label>
-                                <input v-model="newProduct.admin_id" @blur="markFieldAsTouched('admin_id')"
-                                    type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
-                                    :class="{
-                                        'border-red-500': touchedFields.admin_id && formErrors.admin_id
-                                    }" required>
-                                <span v-if="touchedFields.admin_id && formErrors.admin_id"
-                                    class="text-red-500 text-xs mt-1">{{
-                                        formErrors.admin_id }}</span>
-                            </div>
-
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Length</label>
                                 <input v-model="newProduct.calculate_length" type="checkbox"
                                     class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                             </div>
                         </div>
+
+                        <!-- Column 4 -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider">Additional Details</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Size</label>
+                                <input v-model="newProduct.size" type="text"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Color</label>
+                                <input v-model="newProduct.color" type="text"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-1">Admin ID</label>
+                                <input v-model="newProduct.admin_id" type="number"
+                                    class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description field spanning all columns -->
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                        <textarea v-model="newProduct.description" @blur="markFieldAsTouched('description')"
+                            class="w-full px-3 py-1.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 border border-gray-600"
+                            :class="{ 'border-red-500': touchedFields.description && formErrors.description }" 
+                            required rows="2"></textarea>
                     </div>
 
                     <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-700">
@@ -1238,10 +1137,8 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div v-if="showEditModal"
-            class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-3xl p-6 shadow-xl border border-gray-700/50 max-h-[90vh] overflow-auto"
-                @click.stop>
+        <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-7xl p-8 shadow-xl border border-gray-700/50 max-h-[99vh] min-h-[85vh] overflow-auto" @click.stop>
                 <div class="flex justify-between items-center mb-6 border-b border-gray-700/50 pb-4">
                     <div class="flex items-center space-x-2">
                         <PencilIcon class="w-6 h-6 text-purple-400" />
@@ -1253,141 +1150,127 @@ onUnmounted(() => {
                     </button>
                 </div>
 
-                <form @submit.prevent="handleEditSubmit" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="md:col-span-2 bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Basic
-                                Information</h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Product ID</label>
-                                <input v-model="editingProduct.id" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg border border-gray-600 transition-all opacity-70"
-                                    disabled>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Product Name</label>
-                                <input v-model="editingProduct.name" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-                                <textarea v-model="editingProduct.description"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required rows="3"></textarea>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Pricing</h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Price</label>
-                                <input v-model="editingProduct.price" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Selling Discount
-                                    (%)</label>
-                                <input v-model="editingProduct.selling_discount" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    placeholder="0">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Profit</label>
-                                <input v-model="editingProduct.profit" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Tax</label>
-                                <input v-model="editingProduct.tax" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
+                <form @submit.prevent="handleEditSubmit" class="space-y-8">
+                    <!-- Top Row with increased height -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Basic Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Basic Information</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4">
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Product ID</span>
+                                    <input v-model="editingProduct.id" type="text"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg border border-gray-600 mt-1 opacity-70"
+                                        disabled>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Name</span>
+                                    <input v-model="editingProduct.name" type="text"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1"
+                                        required>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Description</span>
+                                    <textarea v-model="editingProduct.description"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1"
+                                        required rows="2"></textarea>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Product Details
-                            </h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Size</label>
-                                <input v-model="editingProduct.size" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Color</label>
-                                <input v-model="editingProduct.color" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
+                        <!-- Pricing Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Pricing Details</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4">
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Price</span>
+                                    <input v-model="editingProduct.price" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1"
+                                        required>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Supplier Price</span>
+                                    <input v-model="editingProduct.seller_price" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Profit</span>
+                                    <input v-model="editingProduct.profit" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1"
+                                        required>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="md:col-span-2 bg-gray-750 p-4 rounded-lg space-y-4">
-                            <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wider mb-3">Additional
-                                Information
-                            </h3>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Bar Code</label>
-                                <input v-model="editingProduct.bar_code" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
+                        <!-- Product Specifications -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Product Specifications</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4">
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Size & Color</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <input v-model="editingProduct.size" type="text" placeholder="Size"
+                                            class="px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600">
+                                        <input v-model="editingProduct.color" type="text" placeholder="Color"
+                                            class="px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600">
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Brand Name</span>
+                                    <input v-model="editingProduct.brand_name" type="text"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Bar Code</span>
+                                    <input v-model="editingProduct.bar_code" type="text"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
                             </div>
+                        </div>
+                    </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Brand Name</label>
-                                <input v-model="editingProduct.brand_name" type="text"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Inventory ID</label>
-                                <input v-model="editingProduct.inventory_id" type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supllier Price</label>
-                                <input v-model="editingProduct.seller_price" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Discount
-                                    (%)</label>
-                                <input v-model="editingProduct.discount" type="number" step="0.01"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Supplier ID</label>
-                                <input v-model="editingProduct.supplier_id" type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Admin ID</label>
-                                <input v-model="editingProduct.admin_id" type="number"
-                                    class="w-full px-4 py-2.5 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600"
-                                    required>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Length</label>
-                                <input v-model="editingProduct.calculate_length" type="checkbox"
-                                    class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <!-- Bottom Row with increased padding -->
+                    <div class="space-y-4">
+                        <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Additional Information</h3>
+                        <div class="bg-gray-800/50 backdrop-blur-sm p-8 rounded-lg border border-gray-700/30">
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Inventory ID</span>
+                                    <input v-model="editingProduct.inventory_id" type="number"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Supplier ID</span>
+                                    <input v-model="editingProduct.supplier_id" type="number"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Admin ID</span>
+                                    <input v-model="editingProduct.admin_id" type="number"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Calculate Length</span>
+                                    <div class="flex items-center mt-3">
+                                        <input v-model="editingProduct.calculate_length" type="checkbox"
+                                            class="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Supplier Discount (%)</span>
+                                    <input v-model="editingProduct.discount" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Selling Discount (%)</span>
+                                    <input v-model="editingProduct.selling_discount" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-400">Tax (%)</span>
+                                    <input v-model="editingProduct.tax" type="number" step="0.01"
+                                        class="w-full px-4 py-1.5 bg-gray-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 border border-gray-600 mt-1">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1425,10 +1308,8 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <div v-if="showViewModal"
-            class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-xl p-6 shadow-xl border border-gray-700/50 max-h-[90vh] overflow-auto"
-                @click.stop>
+        <div v-if="showViewModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div class="bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg w-full max-w-7xl p-8 shadow-xl border border-gray-700/50 max-h-[99vh] min-h-[85vh] overflow-auto" @click.stop>
                 <div class="flex justify-between items-center mb-6 border-b border-gray-700/50 pb-4">
                     <div class="flex items-center space-x-2">
                         <EyeIcon class="w-6 h-6 text-cyan-400" />
@@ -1440,124 +1321,110 @@ onUnmounted(() => {
                     </button>
                 </div>
 
-                <div class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4" v-if="viewingProduct">
-                    <!-- Basic Information -->
-                    <div class="md:col-span-2">
-                        <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Basic Information</h3>
-                        <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/30 space-y-4">
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Product ID</span>
-                                <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{
-                                    viewingProduct.id }}
-                                </p>
+                <div class="space-y-8" v-if="viewingProduct">
+                    <!-- Top Row with increased height -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Basic Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Basic Information</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4 h-[calc(100%-2.5rem)]">
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Product ID</span>
+                                    <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{ viewingProduct.id }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Name</span>
+                                    <p class="text-white mt-1">{{ viewingProduct.name }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Description</span>
+                                    <p class="text-white mt-1">{{ viewingProduct.description }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Name</span>
-                                <p class="text-white mt-1">{{ viewingProduct.name }}</p>
+                        </div>
+
+                        <!-- Pricing Information -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Pricing Details</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4 h-[calc(100%-2.5rem)]">
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Price</span>
+                                    <p class="text-white mt-1">${{ Number(viewingProduct.price).toFixed(2) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Supplier Price</span>
+                                    <p class="text-white mt-1">${{ Number(viewingProduct.seller_price).toFixed(2) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Profit</span>
+                                    <p class="text-white mt-1">${{ Number(viewingProduct.profit).toFixed(2) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Discounts & Tax</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <p class="text-white">Supplier: {{ Number(viewingProduct.discount).toFixed(2) }}%</p>
+                                        <p class="text-white">Tax: {{ Number(viewingProduct.tax).toFixed(2) }}%</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Description</span>
-                                <p class="text-white mt-1">{{ viewingProduct.description }}</p>
+                        </div>
+
+                        <!-- Product Specifications -->
+                        <div class="space-y-4">
+                            <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Product Specifications</h3>
+                            <div class="bg-gray-800/50 backdrop-blur-sm p-5 rounded-lg border border-gray-700/30 space-y-4 h-[calc(100%-2.5rem)]">
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Size & Color</span>
+                                    <div class="grid grid-cols-2 gap-2 mt-1">
+                                        <p class="text-white">Size: {{ viewingProduct.size }}</p>
+                                        <p class="text-white">Color: {{ viewingProduct.color }}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Brand</span>
+                                    <p class="text-white mt-1">
+                                        <span class="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                                            {{ viewingProduct.brand_name }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Bar Code</span>
+                                    <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{ viewingProduct.bar_code }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pricing Information -->
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Pricing Details</h3>
-                        <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/30 space-y-4">
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Price</span>
-                                <p class="text-white mt-1">${{ Number(viewingProduct.price).toFixed(2) }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Suppler Price</span>
-                                <p class="text-white mt-1">${{ Number(viewingProduct.seller_price).toFixed(2) }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Profit</span>
-                                <p class="text-white mt-1">${{ Number(viewingProduct.profit).toFixed(2) }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Suppler Discount</span>
-                                <p class="text-white mt-1">{{ Number(viewingProduct.discount).toFixed(2) }}%</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Selling Discount</span>
-                                <p class="text-white mt-1">{{ viewingProduct.supplier_discount ?
-                                    Number(viewingProduct.supplier_discount).toFixed(2) + '%' : 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Tax</span>
-                                <p class="text-white mt-1">{{ Number(viewingProduct.tax).toFixed(2) }}%</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product Specifications -->
-                    <div class="space-y-4">
-                        <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">Product Specifications</h3>
-                        <div class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/30 space-y-4">
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Size</span>
-                                <p class="text-white mt-1">{{ viewingProduct.size }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Color</span>
-                                <p class="text-white mt-1">{{ viewingProduct.color }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Brand</span>
-                                <p class="text-white mt-1">
-                                    <span
-                                        class="px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                                        {{ viewingProduct.brand_name }}
-                                    </span>
-                                </p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Bar Code</span>
-                                <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{
-                                    viewingProduct.bar_code
-                                }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Information -->
-                    <div class="md:col-span-2">
+                    <!-- Bottom Row with increased padding -->
+                    <div class="space-y-4 mt-4">
                         <h3 class="text-sm font-medium text-gray-300 uppercase mb-3">System Information</h3>
-                        <div
-                            class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/30 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Inventory ID</span>
-                                <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{
-                                    viewingProduct.inventory_id }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Supplier ID</span>
-                                <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{
-                                    viewingProduct.supplier_id }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Admin ID</span>
-                                <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{
-                                    viewingProduct.admin_id
-                                }}</p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Created At</span>
-                                <p class="text-white mt-1">{{ new Date(viewingProduct.created_at).toLocaleString() }}
-                                </p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Updated At</span>
-                                <p class="text-white mt-1">{{ new Date(viewingProduct.updated_at).toLocaleString() }}
-                                </p>
-                            </div>
-                            <div>
-                                <span class="text-sm font-medium text-cyan-400">Calculate Length</span>
-                                <p class="text-white mt-1">{{ viewingProduct.calculate_length ? 'Yes' : 'No' }}</p>
+                        <div class="bg-gray-800/50 backdrop-blur-sm p-8 rounded-lg border border-gray-700/30">
+                            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Inventory ID</span>
+                                    <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{ viewingProduct.inventory_id }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Supplier ID</span>
+                                    <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{ viewingProduct.supplier_id }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Admin ID</span>
+                                    <p class="text-white font-mono bg-gray-700/50 px-2 py-1 rounded mt-1">{{ viewingProduct.admin_id }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Calculate Length</span>
+                                    <p class="text-white mt-1">{{ viewingProduct.calculate_length ? 'Yes' : 'No' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Created At</span>
+                                    <p class="text-white mt-1">{{ new Date(viewingProduct.created_at).toLocaleString() }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-cyan-400">Updated At</span>
+                                    <p class="text-white mt-1">{{ new Date(viewingProduct.updated_at).toLocaleString() }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>

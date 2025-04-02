@@ -217,8 +217,57 @@ const paginatedInventory = computed(() => {
 const totalPages = computed(() => Math.ceil(filteredInventory.value.length / itemsPerPage.value));
 const lowStockItems = computed(() => inventory.value.filter((item) => item.quantity < 20 && item.quantity > 0));
 const totalItems = computed(() => inventory.value.reduce((sum, item) => sum + item.quantity, 0));
-const inventoryValue = computed(() => inventory.value.reduce((sum, item) => sum + (item.quantity * (item.product?.seller_price || 0)), 0));
-const totalProfit = computed(() => inventory.value.reduce((sum, item) => sum + (item.quantity * ((item.product?.price || 0) - (item.product?.seller_price || 0))), 0));
+
+// Updated inventoryValue to use the same calculation logic as calculateStockValue
+const inventoryValue = computed(() => {
+  return inventory.value.reduce((sum, item) => {
+    if (!item?.product || !item?.quantity) return sum;
+    
+    const basePrice = parseFloat(item.product.price) || 0;
+    const supplierDiscount = parseFloat(item.product.discount) || 0;
+    const sellingDiscount = parseFloat(item.product.selling_discount) || 0;
+    const quantity = parseFloat(item.quantity) || 0;
+
+    const priceAfterSupplierDiscount = basePrice * (1 - supplierDiscount / 100);
+    const finalPrice = priceAfterSupplierDiscount * (1 - sellingDiscount / 100);
+    
+    return sum + (finalPrice * quantity);
+  }, 0);
+});
+
+const totalProfit = computed(() => {
+  return inventory.value.reduce((sum, item) => {
+    if (!item?.product || !item?.quantity) return sum;
+    
+    const basePrice = parseFloat(item.product.price) || 0;
+    const supplierDiscount = parseFloat(item.product.discount) || 0;
+    const sellingDiscount = parseFloat(item.product.selling_discount) || 0;
+    const quantity = parseFloat(item.quantity) || 0;
+
+    const priceAfterSupplierDiscount = basePrice * (1 - supplierDiscount / 100);
+    const finalPrice = priceAfterSupplierDiscount * (1 - sellingDiscount / 100);
+    const costPrice = parseFloat(item.product.seller_price) || 0;
+    
+    return sum + ((finalPrice - costPrice) * quantity);
+  }, 0);
+});
+
+const calculateStockValue = computed(() => {
+  if (!selectedItem.value?.product || !selectedItem.value?.quantity) return 0;
+
+  const product = selectedItem.value.product;
+  const quantity = parseFloat(selectedItem.value.quantity) || 0;
+
+  const basePrice = parseFloat(product.price) || 0;
+  const supplierDiscount = parseFloat(product.discount) || 0;
+  const sellingDiscount = parseFloat(product.selling_discount) || 0;
+
+  const priceAfterSupplierDiscount = basePrice * (1 - supplierDiscount / 100);
+  const finalPrice = priceAfterSupplierDiscount * (1 - sellingDiscount / 100);
+  const stockValue = finalPrice * quantity;
+
+  return stockValue.toFixed(2);
+});
 
 const isSidebarVisible = ref(false);
 const toggleSidebar = () => (isSidebarVisible.value = !isSidebarVisible.value);
@@ -245,6 +294,8 @@ const fetchInventory = async () => {
         ...item.product,
         price: parseFloat(item.product?.price || 0),
         seller_price: parseFloat(item.product?.seller_price || 0),
+        discount: parseFloat(item.product?.discount || 0),
+        selling_discount: parseFloat(item.product?.selling_discount || 0),
       },
       calculate_length: item.product?.calculate_length || false,
       size: item.product?.size || 1,
@@ -301,7 +352,6 @@ const grnNumber = ref('');
 
 const saveNewProduct = async () => {
   try {
-    // Basic form validation
     if (!newProduct.value.name || !newProduct.value.price || !newProduct.value.seller_price || !newProduct.value.description) {
       showNotification('Please fill in all required fields (Name, Price, Seller Price, Description)', 'error');
       return;
@@ -312,7 +362,6 @@ const saveNewProduct = async () => {
       return;
     }
 
-    // Construct payload with all fillable fields from Product model
     const payload = {
       name: newProduct.value.name.trim(),
       price: parseFloat(newProduct.value.price) || 0,
@@ -538,7 +587,7 @@ const addStockHistory = (itemId, change, reason, notes, previousQuantity, newQua
   stockHistory.value.unshift({
     id: Date.now(),
     itemId,
-    itemName: item.name || 'Unknown',
+    itemName: item.product?.name || 'Unknown',
     change,
     reason,
     notes,
@@ -592,8 +641,8 @@ const exportInventory = async () => {
       [''],
       ['EXECUTIVE SUMMARY'],
       ['Total Items:', totalItems.value],
-      ['Total Value:', `Rs. ${summary.total_value.toLocaleString()}`],
-      ['Total Profit:', `Rs. ${summary.total_profit.toLocaleString()}`],
+      ['Total Value:', `Rs. ${inventoryValue.value.toLocaleString()}`],
+      ['Total Profit:', `Rs. ${totalProfit.value.toLocaleString()}`],
       ['Low Stock Items:', lowStockItems.value.length],
       ['Categories:', categories.value.length - 1],
       [''],
@@ -601,33 +650,43 @@ const exportInventory = async () => {
     const inventoryHeaders = [
       ['INVENTORY DETAILS REPORT'],
       [''],
-      ['Inventory ID', 'Product ID', 'Name', 'Brand Name', 'Description', 'Bar Code', 'Size', 'Color', 'Quantity', 'Price (Rs.)', 'Seller Price (Rs.)', 'Discount (%)', 'Tax (%)', 'Profit (Rs.)', 'Total Value (Rs.)', 'Location', 'Status', 'Supplier ID', 'Admin ID', 'Added Stock', 'Last Restocked', 'Created Date', 'Updated Date'],
+      ['Inventory ID', 'Product ID', 'Name', 'Brand Name', 'Description', 'Bar Code', 'Size', 'Color', 'Quantity', 'Price (Rs.)', 'Seller Price (Rs.)', 'Discount (%)', 'Selling Discount (%)', 'Tax (%)', 'Profit (Rs.)', 'Total Value (Rs.)', 'Location', 'Status', 'Supplier ID', 'Admin ID', 'Added Stock', 'Last Restocked', 'Created Date', 'Updated Date'],
     ];
-    const inventoryRows = inventoryData.map((item) => [
-      item.id,
-      item.product?.id || 'N/A',
-      item.product?.name || 'N/A',
-      item.product?.brand_name || 'N/A',
-      item.product?.description || 'N/A',
-      item.product?.bar_code || 'N/A',
-      item.product?.size || 'N/A',
-      item.product?.color || 'N/A',
-      item.quantity,
-      item.product?.price || 0,
-      item.product?.seller_price || 0,
-      item.product?.discount || 0,
-      item.product?.tax || 0,
-      item.product?.profit || 0,
-      (item.product?.price || 0) * item.quantity,
-      item.location,
-      item.status,
-      item.product?.supplier_id || 'N/A',
-      item.product?.admin_id || 'N/A',
-      item.added_stock_amount || 0,
-      new Date(item.restock_date_time).toLocaleString(),
-      item.created_at ? new Date(item.created_at).toLocaleString() : 'N/A',
-      item.updated_at ? new Date(item.updated_at).toLocaleString() : 'N/A',
-    ]);
+    const inventoryRows = inventoryData.map((item) => {
+      const basePrice = parseFloat(item.product?.price || 0);
+      const supplierDiscount = parseFloat(item.product?.discount || 0);
+      const sellingDiscount = parseFloat(item.product?.selling_discount || 0);
+      const priceAfterSupplierDiscount = basePrice * (1 - supplierDiscount / 100);
+      const finalPrice = priceAfterSupplierDiscount * (1 - sellingDiscount / 100);
+      const totalValue = finalPrice * item.quantity;
+
+      return [
+        item.id,
+        item.product?.id || 'N/A',
+        item.product?.name || 'N/A',
+        item.product?.brand_name || 'N/A',
+        item.product?.description || 'N/A',
+        item.product?.bar_code || 'N/A',
+        item.product?.size || 'N/A',
+        item.product?.color || 'N/A',
+        item.quantity,
+        item.product?.price || 0,
+        item.product?.seller_price || 0,
+        item.product?.discount || 0,
+        item.product?.selling_discount || 0,
+        item.product?.tax || 0,
+        (finalPrice - (item.product?.seller_price || 0)),
+        totalValue,
+        item.location,
+        item.status,
+        item.product?.supplier_id || 'N/A',
+        item.product?.admin_id || 'N/A',
+        item.added_stock_amount || 0,
+        new Date(item.restock_date_time).toLocaleString(),
+        item.created_at ? new Date(item.created_at).toLocaleString() : 'N/A',
+        item.updated_at ? new Date(item.updated_at).toLocaleString() : 'N/A',
+      ];
+    });
     const inventoryWs = XLSX.utils.aoa_to_sheet([...inventoryHeaders, ...inventoryRows]);
     XLSX.utils.book_append_sheet(workbook, summaryWs, 'Summary');
     XLSX.utils.book_append_sheet(workbook, inventoryWs, 'Inventory Details');
@@ -652,7 +711,7 @@ const exportToPDF = async () => {
     isExporting.value = true;
     const response = await connection.get('/inventory');
     const inventoryData = response.data;
-    let totalValue = inventoryData.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0);
+    const totalValue = inventoryValue.value;
     const element = document.createElement('div');
     element.innerHTML = `
       <div style="padding: 20px; font-family: Arial, sans-serif;">
@@ -672,17 +731,25 @@ const exportToPDF = async () => {
           <h3 style="color: #1f2937;">DETAILED INVENTORY LIST</h3>
           <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
             <tr><th style="text-align: left; padding: 8px; border: 1px solid #d1d5db;">ID</th><th style="text-align: left; padding: 8px; border: 1px solid #d1d5db;">Name</th><th style="text-align: left; padding: 8px; border: 1px solid #d1d5db;">Location</th><th style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Quantity</th><th style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Unit Price</th><th style="text-align: left; padding: 8px; border: 1px solid #d1d5db;">Status</th><th style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Total Value</th></tr>
-            ${inventoryData.map((item) => `
+            ${inventoryData.map((item) => {
+              const basePrice = parseFloat(item.product?.price || 0);
+              const supplierDiscount = parseFloat(item.product?.discount || 0);
+              const sellingDiscount = parseFloat(item.product?.selling_discount || 0);
+              const priceAfterSupplierDiscount = basePrice * (1 - supplierDiscount / 100);
+              const finalPrice = priceAfterSupplierDiscount * (1 - sellingDiscount / 100);
+              const totalItemValue = finalPrice * item.quantity;
+              
+              return `
               <tr>
                 <td style="padding: 8px; border: 1px solid #d1d5db;">${item.id}</td>
-                <td style="padding: 8px; border: 1px solid #d1d5db;">${item.name || 'N/A'}</td>
+                <td style="padding: 8px; border: 1px solid #d1d5db;">${item.product?.name || 'N/A'}</td>
                 <td style="padding: 8px; border: 1px solid #d1d5db;">${item.location}</td>
                 <td style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">${item.quantity}</td>
-                <td style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Rs. ${(item.price || 0).toLocaleString()}</td>
+                <td style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Rs. ${finalPrice.toLocaleString()}</td>
                 <td style="padding: 8px; border: 1px solid #d1d5db;">${item.status}</td>
-                <td style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Rs. ${((item.price || 0) * item.quantity).toLocaleString()}</td>
+                <td style="text-align: right; padding: 8px; border: 1px solid #d1d5db;">Rs. ${totalItemValue.toLocaleString()}</td>
               </tr>
-            `).join('')}
+            `}).join('')}
             <tr><td colspan="6" style="text-align: right; padding: 8px; border: 1px solid #d1d5db; font-weight: bold;">Total:</td><td style="text-align: right; padding: 8px; border: 1px solid #d1d5db; font-weight: bold;">Rs. ${totalValue.toLocaleString()}</td></tr>
           </table>
         </div>
@@ -720,8 +787,25 @@ const dashboardStats = computed(() => [
   { title: 'Low Stock Items', value: lowStockItems.value.length, icon: ExclamationTriangleIcon, color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
 ]);
 
-const viewItemDetails = (item) => {
+const viewItemDetails = async (item) => {
   selectedItem.value = item;
+  try {
+    const productResponse = await connection.get(`/products/inventory/${item.id}`);
+    const inventoryResponse = await connection.get(`/inventory/${item.id}`);
+    
+    selectedItem.value = {
+      ...inventoryResponse.data,
+      product: {
+        ...productResponse.data,
+        price: parseFloat(productResponse.data.price),
+        discount: parseFloat(productResponse.data.discount),
+        selling_discount: parseFloat(productResponse.data.selling_discount),
+        seller_price: parseFloat(productResponse.data.seller_price),
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching details:', error);
+  }
   showViewModal.value = true;
 };
 
@@ -937,12 +1021,12 @@ const FormLabel = {
                 class="flex bg-red-500/10 border border-red-500/20 justify-between p-3 rounded-lg items-center"
                 :class="{ 'animate-fade-in': index < 3 }">
                 <div>
-                  <div class="text-white font-bold">{{ item.name }}</div>
-                  <div class="text-gray-400 text-sm">{{ item.category }}</div>
+                  <div class="text-white font-bold">{{ item.product?.name || 'Unknown' }}</div>
+                  <div class="text-gray-400 text-sm">{{ item.location }}</div>
                 </div>
                 <div class="text-right">
-                  <div class="text-red-400 font-bold">{{ item.quantity }} / {{ item.threshold }}</div>
-                  <div class="text-gray-400 text-xs">In stock / Threshold</div>
+                  <div class="text-red-400 font-bold">{{ item.quantity }}</div>
+                  <div class="text-gray-400 text-xs">In stock</div>
                 </div>
               </div>
             </div>
@@ -951,25 +1035,17 @@ const FormLabel = {
             </div>
           </div>
           <div class="bg-gray-800/80 border border-gray-700/50 p-6 rounded-xl shadow-xl overflow-hidden">
-            <div class="flex justify-between items-center mb-4">
-              <div>
-                <h2 class="text-white text-xl font-bold">Total Profit</h2>
-                <p class="text-gray-400 text-sm">Overall profit calculation</p>
-              </div><span class="bg-green-500/20 rounded-full text-green-400 text-sm px-3 py-1.5">Rs. {{
-                totalProfit.toLocaleString() }}</span>
-            </div>
             <div class="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-500/20 p-4 rounded-xl">
               <div class="flex justify-between items-center">
                 <div class="flex gap-3 items-center">
                   <div class="bg-green-500/20 p-2 rounded-lg">
                     <ArrowTrendingUpIcon class="h-5 text-green-400 w-5" />
                   </div>
-                  <div><span class="text-gray-400 text-sm">Total Value</span>
-                    <p class="text-white font-bold mt-0.5">Rs. {{ inventoryValue.toLocaleString() }}</p>
-                  </div>
                 </div>
-                <div class="text-right"><span class="text-gray-400 text-sm">Profit Margin</span>
-                  <p class="text-green-400 font-bold mt-0.5">{{ ((totalProfit / inventoryValue) * 100).toFixed(1) }}%
+                <div class="text-right">
+                  <span class="text-gray-400 text-sm">Profit Margin</span>
+                  <p class="text-green-400 font-bold mt-0.5">
+                    {{ inventoryValue.value > 0 ? ((totalProfit.value / inventoryValue.value) * 100).toFixed(1) : 0 }}%
                   </p>
                 </div>
               </div>
@@ -1102,7 +1178,7 @@ const FormLabel = {
           </button>
         </div>
         <div v-if="selectedItem" class="text-gray-300 mb-6">
-          <p>Are you sure you want to delete <span class="font-bold">{{ selectedItem.name }}</span>?</p>
+          <p>Are you sure you want to delete <span class="font-bold">{{ selectedItem.product?.name || 'Item' }}</span>?</p>
           <p class="mt-2">This action cannot be undone.</p>
         </div>
         <div class="flex justify-end gap-3 mt-6"><button @click="showDeleteConfirm = false"
@@ -1240,6 +1316,129 @@ const FormLabel = {
       </div>
     </div>
 
+    <!-- View Details Modal -->
+    <div v-if="showViewModal" class="flex bg-black/80 justify-center p-4 backdrop-blur-sm fixed inset-0 items-center z-50">
+      <div class="bg-gradient-to-br border border-gray-700/50 p-6 rounded-2xl shadow-2xl w-full animate-fade-in from-gray-900/95 max-w-2xl to-gray-800/95">
+        <!-- Enhanced Header -->
+        <div class="flex justify-between items-start mb-8">
+          <div class="flex gap-4 items-center">
+            <div class="bg-gradient-to-br border border-blue-500/20 p-3 rounded-xl shadow-lg from-blue-600/10 to-blue-700/10">
+              <EyeIcon class="h-6 text-blue-400 w-6" />
+            </div>
+            <div>
+              <h2 class="text-2xl text-white font-bold mb-1">Inventory Details</h2>
+              <p class="text-gray-400 text-sm">Complete item information</p>
+            </div>
+          </div>
+          <button @click="showViewModal = false" 
+                  class="p-2 rounded-lg duration-200 hover:bg-gray-700/50 transition-colors">
+            <XMarkIcon class="h-5 text-gray-400 w-5" />
+          </button>
+        </div>
+
+        <div v-if="selectedItem" class="space-y-6">
+          <!-- Main Info Card -->
+          <div class="bg-gradient-to-br border border-gray-700/50 p-5 rounded-xl from-gray-800/50 to-gray-800/30">
+            <div class="flex justify-between items-center mb-4">
+              <div class="flex gap-3 items-center">
+                <div class="bg-gray-700/50 p-2 rounded-lg">
+                  <ArchiveBoxIcon class="h-5 text-gray-400 w-5" />
+                </div>
+                <div>
+                  <span class="text-gray-400 text-sm">Inventory ID</span>
+                  <h3 class="text-lg text-white font-bold">#{{ selectedItem.id }}</h3>
+                </div>
+              </div>
+              <span :class="{
+                'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2': true,
+                'bg-emerald-500/20 text-emerald-400': selectedItem.status === 'In Stock',
+                'bg-yellow-500/20 text-yellow-400': selectedItem.status === 'Low Stock',
+                'bg-red-500/20 text-red-400': selectedItem.status === 'Out Of Stock'
+              }">
+                <span class="h-2 rounded-full w-2" :class="{
+                  'bg-emerald-400': selectedItem.status === 'In Stock',
+                  'bg-yellow-400': selectedItem.status === 'Low Stock',
+                  'bg-red-400': selectedItem.status === 'Out Of Stock'
+                }"></span>
+                {{ selectedItem.status }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="grid grid-cols-3 gap-4">
+            <!-- Current Stock -->
+            <div class="bg-gradient-to-br border border-emerald-500/20 p-4 rounded-xl from-emerald-500/10 to-emerald-600/10">
+              <div class="flex gap-3 items-center mb-3">
+                <ArchiveBoxIcon class="h-5 text-emerald-400 w-5" />
+                <span class="text-gray-300 text-sm font-medium">Current Stock</span>
+              </div>
+              <div class="text-2xl text-white font-bold">{{ selectedItem.quantity }}</div>
+              <div class="text-emerald-400/80 text-sm mt-1">Available Units</div>
+            </div>
+
+            <!-- Added Stock -->
+            <div class="bg-gradient-to-br border border-blue-500/20 p-4 rounded-xl from-blue-500/10 to-blue-600/10">
+              <div class="flex gap-3 items-center mb-3">
+                <ArrowTrendingUpIcon class="h-5 text-blue-400 w-5" />
+                <span class="text-gray-300 text-sm font-medium">Added Stock</span>
+              </div>
+              <div class="text-2xl text-white font-bold">+{{ selectedItem.added_stock_amount || 0 }}</div>
+              <div class="text-blue-400/80 text-sm mt-1">Last Addition</div>
+            </div>
+
+            <!-- Stock Value -->
+            <div class="bg-gradient-to-br border border-violet-500/20 p-4 rounded-xl from-violet-500/10 to-violet-600/10">
+  <div class="flex gap-3 items-center mb-3">
+    <ArrowTrendingUpIcon class="h-5 text-violet-400 w-5" />
+    <span class="text-gray-300 text-sm font-medium">Stock Value</span>
+  </div>
+  <div class="text-2xl text-white font-bold">
+  Rs. {{ Number(calculateStockValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+</div>
+  <div class="text-sm text-violet-400/80 mt-1">
+    ({{ selectedItem.product.price }} - {{ selectedItem.product.discount }}% discount) × {{ selectedItem.quantity }}
+  </div>
+</div>
+          </div>
+
+          <!-- Additional Details -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-4">
+              <div class="bg-gray-800/50 border border-gray-700/50 p-4 rounded-xl">
+                <span class="text-gray-400 text-sm">Location</span>
+                <div class="flex gap-2 items-center mt-1">
+                  <FunnelIcon class="h-5 text-gray-400 w-5" />
+                  <p class="text-lg text-white font-medium">{{ selectedItem.location }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-gray-800/50 border border-gray-700/50 p-4 rounded-xl">
+                <span class="text-gray-400 text-sm">Last Updated</span>
+                <div class="flex gap-2 items-center mt-1">
+                  <ArrowPathIcon class="h-5 text-gray-400 w-5" />
+                  <p class="text-lg text-white font-medium">
+                    {{ new Date(selectedItem.restock_date_time).toLocaleString() }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="flex border-gray-700/50 border-t justify-end pt-6">
+            <button @click="showViewModal = false" 
+                    class="flex bg-gradient-to-r rounded-lg text-white duration-200 font-medium from-gray-700 gap-2 hover:from-gray-600 hover:to-gray-500 items-center px-6 py-2.5 to-gray-600 transition-all">
+              <XMarkIcon class="h-5 w-5" />
+              Close Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Multi-Step Modal -->
     <TransitionRoot appear :show="showMultiStepModal" as="template">
       <Dialog as="div" @close="showMultiStepModal = false" class="relative z-50">
@@ -1266,7 +1465,7 @@ const FormLabel = {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black p-6 text-left align-middle shadow-xl transition-all border border-gray-700/50">
+              <DialogPanel class="w-full max-w-6xl transform overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black p-6 text-left align-middle shadow-xl transition-all border border-gray-700/50">
                 <!-- Progress indicator -->
                 <div class="mb-8">
                   <div class="flex items-center justify-between px-2">
@@ -1318,7 +1517,7 @@ const FormLabel = {
                 </div>
 
                 <div v-if="currentStep === 2" class="space-y-6">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField>
                       <FormLabel>Product Name</FormLabel>
                       <input v-model="newProduct.name" type="text" class="form-input" required />
@@ -1345,11 +1544,11 @@ const FormLabel = {
                     </FormField>
                     <FormField>
                       <FormLabel>Calculate Length</FormLabel>
-                      <input v-model="newProduct.calculate_length" type="checkbox" class="form-input" />
+                      <input v-model="newProduct.calculate_length" type="checkbox" class="form-input h-10" />
                     </FormField>
-                    <FormField>
+                    <FormField class="md:col-span-2">
                       <FormLabel>Description</FormLabel>
-                      <textarea v-model="newProduct.description" class="form-input" required rows="3"></textarea>
+                      <textarea v-model="newProduct.description" class="form-input" required rows="2"></textarea>
                     </FormField>
                     <FormField>
                       <FormLabel>Supplier ID</FormLabel>
