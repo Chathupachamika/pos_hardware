@@ -811,7 +811,8 @@ const viewItemDetails = async (item) => {
 
 const handleGRNClose = () => {
   showGRN.value = false;
-  location.reload();
+  // Update inventory locally instead of refreshing the page
+  fetchInventory();
 };
 
 // Add form components
