@@ -110,7 +110,7 @@ const validateInput = (field, value) => {
     }
 
 
-    const numericFields = ['price', 'seller_price', 'tax', 'inventory_id', 'supplier_id', 'admin_id', 'discount', 'selling_discount']; // Add selling_discount
+    const numericFields = ['price', 'seller_price', 'tax', 'inventory_id', 'supplier_id', 'admin_id', 'discount', 'selling_discount']; 
     if (numericFields.includes(field)) {
         const numValue = Number(value)
         if (isNaN(numValue)) {
