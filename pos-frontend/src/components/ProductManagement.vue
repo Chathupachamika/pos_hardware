@@ -128,7 +128,7 @@ const markFieldAsTouched = (field) => {
     validateInput(field, newProduct.value[field])
 }
 
-// Only validate required fields
+
 const validateForm = (product) => {
     const requiredFields = ['name', 'description', 'price', 'seller_price']
     let isValid = true
