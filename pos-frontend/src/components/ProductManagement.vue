@@ -78,7 +78,7 @@ const showSupplierInput = ref(false)
 const showBrandInput = ref(false)
 
 const formErrors = ref({})
-const touchedFields = ref({})  // Add this new ref
+const touchedFields = ref({}) 
 
 const selectedProducts = ref([])
 const uploadedFile = ref(null)
