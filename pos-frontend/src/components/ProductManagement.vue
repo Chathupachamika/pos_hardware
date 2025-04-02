@@ -109,7 +109,7 @@ const validateInput = (field, value) => {
         return false
     }
 
-    // Add numeric validation for specific fields
+
     const numericFields = ['price', 'seller_price', 'tax', 'inventory_id', 'supplier_id', 'admin_id', 'discount', 'selling_discount']; // Add selling_discount
     if (numericFields.includes(field)) {
         const numValue = Number(value)
