@@ -13,7 +13,9 @@ class Sales extends Model
         'payment_type',
         'status',
         'time',
-        'discount'
+        'cart_discount',
+        'product_discounts_total',
+        'total_discount_amount'
     ];
 
     protected $casts = [

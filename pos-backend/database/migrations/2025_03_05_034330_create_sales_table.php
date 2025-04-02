@@ -19,7 +19,9 @@ return new class extends Migration
             $table->boolean('status');
             $table->enum('payment_type', ['CASH', 'CREDIT_CARD', 'DEBIT_CARD']);
             $table->double('amount');
-            $table->double('discount');
+            $table->double('cart_discount')->default(0); // Renamed from discount to cart_discount
+            $table->double('product_discounts_total')->default(0); // New column for sum of product discounts
+            $table->double('total_discount_amount')->default(0); // New column for total discount amount
             $table->foreignIdFor(Cashier::class);
             $table->foreignIdFor(Customer::class)->nullable();
             $table->timestamps();
