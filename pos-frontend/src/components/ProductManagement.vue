@@ -45,7 +45,7 @@ const newProduct = ref({
     price: '',
     seller_price: '',
     discount: '', 
-    selling_discount: '', // Add this line for selling discount
+    selling_discount: '', 
     tax: '',
     size: '',
     color: '',
