@@ -98,7 +98,7 @@ const formatCurrency = (value) => {
 const validateInput = (field, value) => {
     if (!touchedFields.value[field]) return true
 
-    // Add XSS validation
+    
     if (typeof value === 'string' && /<script>/i.test(value)) {
         formErrors.value[field] = 'Invalid characters in field'
         return false
