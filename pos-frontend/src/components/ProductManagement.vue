@@ -745,13 +745,28 @@ const updateCalculateLength = async (productId, calculateLength) => {
 
 const openGRNDocument = async (product) => {
     try {
-        // Fetch supplier details
-        const supplierResponse = await connection.get(`/suppliers/${product.supplier_id}`)
-        const supplierData = supplierResponse.data
+        // Log product details
+        console.log('Product Details:', product);
 
-        // Combine product data with supplier details
+        // Fetch and log inventory details
+        const inventoryResponse = await connection.get(`/inventory/${product.inventory_id}`);
+        console.log('Inventory Details:', inventoryResponse.data);
+        
+        // Fetch supplier details
+        const supplierResponse = await connection.get(`/suppliers/${product.supplier_id}`);
+        const supplierData = supplierResponse.data;
+
+        // Log combined details
+        console.log('Combined Product & Inventory Details:', {
+            product,
+            inventory: inventoryResponse.data,
+            supplier: supplierData
+        });
+
+        // Combine product data with supplier details and inventory quantity
         grnProduct.value = {
             ...product,
+            quantity: inventoryResponse.data.quantity, // Add inventory quantity
             supplierDetails: {
                 name: supplierData.name,
                 email: supplierData.email,
@@ -759,15 +774,14 @@ const openGRNDocument = async (product) => {
             }
         }
         
-        // Generate GRN number using product ID
         grnNumber.value = `GRN-${new Date().getFullYear()}-${String(product.id).padStart(5, '0')}`
         showGRN.value = true
     } catch (error) {
-        console.error('Error fetching supplier details:', error)
+        console.error('Error fetching details:', error)
         Swal.fire({
             icon: "error", 
             title: "Error!",
-            text: "Failed to fetch supplier details",
+            text: "Failed to fetch details",
             background: '#1e293b',
             color: '#ffffff'
         })

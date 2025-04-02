@@ -315,9 +315,9 @@ const totalAmount = computed(() => {
                   </td>
                   <td class="p-4">
                     <div class="space-y-1 text-sm">
-                      <p><span class="font-medium text-gray-600">Brand:</span> {{ productDetails.brand_name }}</p>
-                      <p><span class="font-medium text-gray-600">Size:</span> {{ productDetails.size }}</p>
-                      <p><span class="font-medium text-gray-600">Color:</span> {{ productDetails.color }}</p>
+                      <p><span class="font-medium text-gray-600">Brand:</span> <span class="text-gray-800">{{ productDetails.brand_name }}</span></p>
+                      <p><span class="font-medium text-gray-600">Size:</span> <span class="text-gray-800">{{ productDetails.size }}</span></p>
+                      <p><span class="font-medium text-gray-600">Color:</span> <span class="text-gray-800">{{ productDetails.color }}</span></p>
                       <p class="flex items-center">
                         <span class="font-medium text-gray-600 mr-1">Quality Check:</span>
                         <CheckCircleIcon class="h-4 w-4 text-green-500" />
