@@ -276,7 +276,7 @@ const handleAddProduct = async () => {
     isAddingProduct.value = true
 
     try {
-        // Fetch quantity from inventory using inventory_id
+        
         const inventoryResponse = await connection.get(`/inventory/${newProduct.value.inventory_id}`)
         const inventoryData = inventoryResponse.data
         if (!inventoryData || !inventoryData.quantity) {
