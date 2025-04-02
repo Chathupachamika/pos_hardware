@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, h } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import Header from './Header.vue';
@@ -21,6 +21,17 @@ import {
   ChevronUpIcon,
   ChevronDownIcon,
   EyeIcon,
+  ArrowRightIcon,
+  ArrowLeftIcon,
+  CubeIcon,
+  CalendarIcon,
+  MapPinIcon,
+  TagIcon,
+  ShoppingBagIcon,
+  IdentificationIcon,
+  UserIcon,
+  BuildingStorefrontIcon,
+  QrCodeIcon,
 } from '@heroicons/vue/24/outline';
 import { Bar } from 'vue-chartjs';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -29,8 +40,22 @@ import * as XLSX from 'xlsx';
 import StockUpdateGRN from './StockUpdateGRN.vue';
 import html2pdf from 'html2pdf.js';
 import GRNDocument from './GRNDocument.vue';
+import { 
+  TransitionRoot,
+  TransitionChild,
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+} from '@headlessui/vue';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+const props = defineProps({
+  showMultiStepModal: {
+    type: Boolean,
+    default: false
+  }
+});
 
 const searchQuery = ref('');
 const selectedCategory = ref('All');
@@ -704,6 +729,21 @@ const handleGRNClose = () => {
   showGRN.value = false;
   location.reload();
 };
+
+// Add form components
+const FormField = {
+  name: 'FormField',
+  setup(props, { slots }) {
+    return () => h('div', { class: 'form-field' }, slots.default());
+  }
+};
+
+const FormLabel = {
+  name: 'FormLabel',
+  setup(props, { slots }) {
+    return () => h('label', { class: 'form-label' }, slots.default());
+  }
+};
 </script>
 
 <template>
@@ -1073,191 +1113,6 @@ const handleGRNClose = () => {
       </div>
     </div>
 
-    <div v-if="showAddModal"
-      class="flex bg-black/80 justify-center p-4 backdrop-blur-sm fixed inset-0 items-center z-50">
-      <div
-        class="bg-gradient-to-br border border-gray-700/50 p-6 rounded-2xl shadow-2xl w-full animate-fade-in from-gray-900/95 max-w-lg to-gray-800/95">
-        <div class="flex justify-between items-start mb-8">
-          <div class="flex gap-4 items-center">
-            <div
-              class="bg-gradient-to-br border border-emerald-500/20 p-3 rounded-xl shadow-lg from-emerald-600/10 to-emerald-700/10">
-              <PlusCircleIcon class="h-6 text-emerald-400 w-6" />
-            </div>
-            <div>
-              <h2 class="text-2xl text-white font-bold mb-1">Add New Inventory</h2>
-              <p class="text-gray-400 text-sm">Enter item details below</p>
-            </div>
-          </div>
-          <button @click="showAddModal = false"
-            class="p-2 rounded-lg duration-200 hover:bg-gray-700/50 transition-colors">
-            <XMarkIcon class="h-5 text-gray-400 w-5" />
-          </button>
-        </div>
-        <div class="space-y-6">
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="text-gray-300 text-sm block font-medium mb-2">Quantity*<span
-                  class="text-emerald-500 ml-1">*</span></label>
-              <div class="relative"><input v-model.number="newItem.quantity" type="number" min="0"
-                  class="bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 w-full duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-4 py-2.5 transition-all"
-                  required />
-                <div class="flex absolute inset-y-0 items-center pr-3 right-0">
-                  <ArchiveBoxIcon class="h-5 text-gray-500 w-5" />
-                </div>
-              </div>
-            </div>
-            <div><label class="text-gray-300 text-sm block font-medium mb-2">Location<span
-                  class="text-emerald-500 ml-1">*</span></label><select v-model="newItem.location"
-                class="bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 w-full appearance-none cursor-pointer duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-4 py-2.5 transition-all"
-                required>
-                <option value="" disabled>Select Location</option>
-                <option v-for="location in locations" :key="location" :value="location">{{ location }}</option>
-              </select></div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div><label class="text-gray-300 text-sm block font-medium mb-2">Restock Date & Time<span
-                  class="text-emerald-500 ml-1">*</span></label><input v-model="newItem.restock_date_time"
-                type="datetime-local"
-                class="bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 w-full duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-4 py-2.5 transition-all"
-                required /></div>
-            <div><label class="text-gray-300 text-sm block font-medium mb-2">Status</label><select
-                v-model="newItem.status"
-                class="bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 w-full appearance-none cursor-pointer duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-4 py-2.5 transition-all">
-                <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
-              </select></div>
-          </div>
-          <div><label class="text-gray-300 text-sm block font-medium mb-2">Additional Stock</label>
-            <div class="relative"><input v-model.number="newItem.added_stock_amount" type="number" min="0"
-                class="bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 w-full duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 px-4 py-2.5 transition-all" />
-              <div class="flex absolute inset-y-0 items-center pr-3 right-0">
-                <ArrowTrendingUpIcon class="h-5 text-gray-500 w-5" />
-              </div>
-            </div>
-          </div>
-          <p class="text-gray-400 text-sm"><span class="text-emerald-500">*</span> Required fields</p>
-          <div class="flex border-gray-700/50 border-t justify-end gap-3 items-center mt-8 pt-6">
-            <button @click="showAddModal = false"
-              class="rounded-lg text-gray-400 duration-200 hover:bg-gray-700/50 hover:text-gray-300 px-4 py-2 transition-colors">Cancel</button>
-            <button @click="saveNewItem"
-              :disabled="isAddingInventory || !newItem.quantity || !newItem.location || !newItem.restock_date_time"
-              class="flex bg-gradient-to-r rounded-lg shadow-emerald-500/20 shadow-lg text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none duration-300 font-medium from-emerald-600 gap-2 hover:from-emerald-500 hover:to-emerald-400 items-center px-6 py-2.5 relative to-emerald-500 transition-all">
-              <template v-if="isAddingInventory"><svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
-                  fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                  </path>
-                </svg><span>Adding Item...</span></template>
-              <template v-else>
-                <PlusCircleIcon class="h-5 w-5" /><span>Add Item</span>
-              </template>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-    <div v-if="showViewModal"
-      class="flex bg-black/80 justify-center p-4 backdrop-blur-sm fixed inset-0 items-center z-50">
-      <div
-        class="bg-gradient-to-br border border-gray-700/50 p-6 rounded-2xl shadow-2xl w-full animate-fade-in from-gray-900/95 max-w-2xl to-gray-800/95">
-        <div class="flex justify-between items-start mb-8">
-          <div class="flex gap-4 items-center">
-            <div
-              class="bg-gradient-to-br border border-blue-500/20 p-3 rounded-xl shadow-lg from-blue-600/10 to-blue-700/10">
-              <EyeIcon class="h-6 text-blue-400 w-6" />
-            </div>
-            <div>
-              <h2 class="text-2xl text-white font-bold mb-1">Inventory Details</h2>
-              <p class="text-gray-400 text-sm">Complete item information</p>
-            </div>
-          </div>
-          <button @click="showViewModal = false"
-            class="p-2 rounded-lg duration-200 hover:bg-gray-700/50 transition-colors">
-            <XMarkIcon class="h-5 text-gray-400 w-5" />
-          </button>
-        </div>
-        <div v-if="selectedItem" class="space-y-6">
-          <div class="bg-gradient-to-br border border-gray-700/50 p-5 rounded-xl from-gray-800/50 to-gray-800/30">
-            <div class="flex justify-between items-center mb-4">
-              <div class="flex gap-3 items-center">
-                <div class="bg-gray-700/50 p-2 rounded-lg">
-                  <ArchiveBoxIcon class="h-5 text-gray-400 w-5" />
-                </div>
-                <div><span class="text-gray-400 text-sm">Inventory ID</span>
-                  <h3 class="text-lg text-white font-bold">#{{ selectedItem.id }}</h3>
-                </div>
-              </div><span
-                :class="{ 'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2': true, 'bg-emerald-500/20 text-emerald-400': selectedItem.status === 'In Stock', 'bg-yellow-500/20 text-yellow-400': selectedItem.status === 'Low Stock', 'bg-red-500/20 text-red-400': selectedItem.status === 'Out Of Stock' }"><span
-                  class="h-2 rounded-full w-2"
-                  :class="{ 'bg-emerald-400': selectedItem.status === 'In Stock', 'bg-yellow-400': selectedItem.status === 'Low Stock', 'bg-red-400': selectedItem.status === 'Out Of Stock' }"></span>{{
-                selectedItem.status }}</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-4">
-            <div
-              class="bg-gradient-to-br border border-emerald-500/20 p-4 rounded-xl from-emerald-500/10 to-emerald-600/10">
-              <div class="flex gap-3 items-center mb-3">
-                <ArchiveBoxIcon class="h-5 text-emerald-400 w-5" /><span
-                  class="text-gray-300 text-sm font-medium">Current
-                  Stock</span>
-              </div>
-              <div class="text-2xl text-white font-bold">{{ selectedItem.quantity }}</div>
-              <div class="text-emerald-400/80 text-sm mt-1">Available Units</div>
-            </div>
-            <div class="bg-gradient-to-br border border-blue-500/20 p-4 rounded-xl from-blue-500/10 to-blue-600/10">
-              <div class="flex gap-3 items-center mb-3">
-                <ArrowTrendingUpIcon class="h-5 text-blue-400 w-5" /><span
-                  class="text-gray-300 text-sm font-medium">Added
-                  Stock</span>
-              </div>
-              <div class="text-2xl text-white font-bold">+{{ selectedItem.added_stock_amount || 0 }}</div>
-              <div class="text-blue-400/80 text-sm mt-1">Last Addition</div>
-            </div>
-            <div
-              class="bg-gradient-to-br border border-violet-500/20 p-4 rounded-xl from-violet-500/10 to-violet-600/10">
-              <div class="flex gap-3 items-center mb-3">
-                <ArrowTrendingUpIcon class="h-5 text-violet-400 w-5" /><span
-                  class="text-gray-300 text-sm font-medium">Stock
-                  Value</span>
-              </div>
-              <div class="text-2xl text-white font-bold">Rs. {{ (selectedItem.price *
-                selectedItem.quantity).toLocaleString() }}</div>
-              <div class="text-sm text-violet-400/80 mt-1">Total Value</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-4">
-              <div class="bg-gray-800/50 border border-gray-700/50 p-4 rounded-xl"><span
-                  class="text-gray-400 text-sm">Location</span>
-                <div class="flex gap-2 items-center mt-1">
-                  <FunnelIcon class="h-5 text-gray-400 w-5" />
-                  <p class="text-lg text-white font-medium">{{ selectedItem.location }}</p>
-                </div>
-              </div>
-            </div>
-            <div class="space-y-4">
-              <div class="bg-gray-800/50 border border-gray-700/50 p-4 rounded-xl"><span
-                  class="text-gray-400 text-sm">Last
-                  Updated</span>
-                <div class="flex gap-2 items-center mt-1">
-                  <ArrowPathIcon class="h-5 text-gray-400 w-5" />
-                  <p class="text-lg text-white font-medium">{{ new Date(selectedItem.restock_date_time).toLocaleString()
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex border-gray-700/50 border-t justify-end pt-6"><button @click="showViewModal = false"
-              class="flex bg-gradient-to-r rounded-lg text-white duration-200 font-medium from-gray-700 gap-2 hover:from-gray-600 hover:to-gray-500 items-center px-6 py-2.5 to-gray-600 transition-all">
-              <XMarkIcon class="h-5 w-5" />Close Details
-            </button></div>
-        </div>
-      </div>
-    </div>
-
-
     <StockUpdateGRN v-if="showGRN" :stockData="selectedItem" :grnNumber="grnNumber" :showModal="showGRN"
       :adjustmentQuantity="stockAdjustment.quantity" @close="handleGRNClose" />
 
@@ -1386,148 +1241,152 @@ const handleGRNClose = () => {
     </div>
 
     <!-- Multi-Step Modal -->
-    <div v-if="showMultiStepModal"
-      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div
-        class="bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 rounded-2xl w-full max-w-3xl p-8 shadow-2xl border border-gray-700/50 max-h-[90vh] overflow-auto">
-        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-          <h2 class="text-2xl font-bold text-white">
-            {{ currentStep === 1 ? 'Step 1: Add New Inventory' : 'Step 2: Add New Product' }}
-          </h2>
-          <button @click="showMultiStepModal = false"
-            class="text-gray-400 hover:text-gray-200 hover:bg-gray-700 p-2 rounded-full transition-colors">
-            <XMarkIcon class="w-5 h-5" />
-          </button>
-        </div>
+    <TransitionRoot appear :show="showMultiStepModal" as="template">
+      <Dialog as="div" @close="showMultiStepModal = false" class="relative z-50">
+        <!-- Backdrop overlay with animation -->
+        <TransitionChild
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" />
+        </TransitionChild>
 
-        <!-- Step 1: Add New Inventory -->
-        <div v-if="currentStep === 1" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Quantity</label>
-              <input v-model="newItem.quantity" type="number"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-emerald-500 focus:border-emerald-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Restock Date & Time</label>
-              <input v-model="newItem.restock_date_time" type="datetime-local"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-emerald-500 focus:border-emerald-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Added Stock Amount</label>
-              <input v-model="newItem.added_stock_amount" type="number"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-emerald-500 focus:border-emerald-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Location</label>
-              <select v-model="newItem.location"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-emerald-500 focus:border-emerald-500">
-                <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
-              <select v-model="newItem.status"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-emerald-500 focus:border-emerald-500">
-                <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button @click="showMultiStepModal = false"
-              class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">Cancel</button>
-            <button @click="saveNewItem" :disabled="isAddingInventory"
-              class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg hover:from-emerald-500 hover:to-emerald-400 transition-all">
-              {{ isAddingInventory ? 'Saving...' : 'Next' }}
-            </button>
-          </div>
-        </div>
+        <div class="fixed inset-0 overflow-y-auto">
+          <div class="flex min-h-full items-center justify-center p-4 text-center">
+            <!-- Modal panel with animation -->
+            <TransitionChild
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
+            >
+              <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-gradient-to-br from-gray-800 via-gray-900 to-black p-6 text-left align-middle shadow-xl transition-all border border-gray-700/50">
+                <!-- Progress indicator -->
+                <div class="mb-8">
+                  <div class="flex items-center justify-between px-2">
+                    <span class="text-sm font-medium text-emerald-400">{{ currentStep === 1 ? 'Inventory Details' : 'Product Information' }}</span>
+                    <span class="text-sm text-gray-400">Step {{ currentStep }} of 2</span>
+                  </div>
+                  <div class="mt-2 h-2 w-full rounded-full bg-gray-700">
+                    <div
+                      class="h-2 rounded-full transition-all duration-500 ease-in-out"
+                      :class="currentStep === 1 ? 'w-1/2 bg-gradient-to-r from-emerald-500 to-emerald-400' : 'w-full bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-500'"
+                    ></div>
+                  </div>
+                </div>
 
-        <!-- Step 2: Add New Product -->
-        <div v-if="currentStep === 2" class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Product Name</label>
-              <input v-model="newProduct.name" type="text"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Price</label>
-              <input v-model="newProduct.price" type="number" step="0.01"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Seller Price</label>
-              <input v-model="newProduct.seller_price" type="number" step="0.01"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Supplier Discount</label>
-              <input v-model="newProduct.discount" type="number" step="0.01"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Selling Discount</label>
-              <input v-model="newProduct.selling_discount" type="number" step="0.01"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Tax</label>
-              <input v-model="newProduct.tax" type="number" step="0.01"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Calculate Length</label>
-              <input v-model="newProduct.calculate_length" type="checkbox"
-                class="w-5 h-5 text-emerald-500 bg-gray-800 border-gray-600 rounded focus:ring-emerald-500" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
-              <textarea v-model="newProduct.description"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required rows="3"></textarea>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Supplier ID</label>
-              <input v-model="newProduct.supplier_id" type="number"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Admin ID</label>
-              <input v-model="newProduct.admin_id" type="number"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Brand Name</label>
-              <input v-model="newProduct.brand_name" type="text"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Size</label>
-              <input v-model="newProduct.size" type="text"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Color</label>
-              <input v-model="newProduct.color" type="text"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Bar Code</label>
-              <input v-model="newProduct.bar_code" type="text"
-                class="w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-blue-500 focus:border-blue-500" required />
-            </div>
-          </div>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button @click="currentStep = 1"
-              class="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">Back</button>
-            <button @click="saveNewProduct"
-              class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-500 hover:to-blue-400 transition-all">
-              Save Product
-            </button>
+                <!-- Rest of your new modal content -->
+                <div v-if="currentStep === 1" class="space-y-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField>
+                      <FormLabel>Quantity</FormLabel>
+                      <input v-model="newItem.quantity" type="number" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Restock Date & Time</FormLabel>
+                      <input v-model="newItem.restock_date_time" type="datetime-local" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Added Stock Amount</FormLabel>
+                      <input v-model="newItem.added_stock_amount" type="number" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Location</FormLabel>
+                      <select v-model="newItem.location" class="form-input">
+                        <option v-for="loc in locations" :key="loc" :value="loc">{{ loc }}</option>
+                      </select>
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Status</FormLabel>
+                      <select v-model="newItem.status" class="form-input">
+                        <option v-for="status in statusOptions" :key="status" :value="status">{{ status }}</option>
+                      </select>
+                    </FormField>
+                  </div>
+                  <div class="flex justify-end space-x-3 mt-6">
+                    <button @click="showMultiStepModal = false" class="btn-secondary">Cancel</button>
+                    <button @click="saveNewItem" :disabled="isAddingInventory" class="btn-primary">
+                      {{ isAddingInventory ? 'Saving...' : 'Next' }}
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="currentStep === 2" class="space-y-6">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField>
+                      <FormLabel>Product Name</FormLabel>
+                      <input v-model="newProduct.name" type="text" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Price</FormLabel>
+                      <input v-model="newProduct.price" type="number" step="0.01" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Seller Price</FormLabel>
+                      <input v-model="newProduct.seller_price" type="number" step="0.01" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Supplier Discount</FormLabel>
+                      <input v-model="newProduct.discount" type="number" step="0.01" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Selling Discount</FormLabel>
+                      <input v-model="newProduct.selling_discount" type="number" step="0.01" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Tax</FormLabel>
+                      <input v-model="newProduct.tax" type="number" step="0.01" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Calculate Length</FormLabel>
+                      <input v-model="newProduct.calculate_length" type="checkbox" class="form-input" />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Description</FormLabel>
+                      <textarea v-model="newProduct.description" class="form-input" required rows="3"></textarea>
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Supplier ID</FormLabel>
+                      <input v-model="newProduct.supplier_id" type="number" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Admin ID</FormLabel>
+                      <input v-model="newProduct.admin_id" type="number" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Brand Name</FormLabel>
+                      <input v-model="newProduct.brand_name" type="text" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Size</FormLabel>
+                      <input v-model="newProduct.size" type="text" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Color</FormLabel>
+                      <input v-model="newProduct.color" type="text" class="form-input" required />
+                    </FormField>
+                    <FormField>
+                      <FormLabel>Bar Code</FormLabel>
+                      <input v-model="newProduct.bar_code" type="text" class="form-input" required />
+                    </FormField>
+                  </div>
+                  <div class="flex justify-end space-x-3 mt-6">
+                    <button @click="currentStep = 1" class="btn-secondary">Back</button>
+                    <button @click="saveNewProduct" class="btn-primary">Save Product</button>
+                  </div>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
-      </div>
-    </div>
+      </Dialog>
+    </TransitionRoot>
   </div>
 </template>
 
@@ -1586,5 +1445,41 @@ const handleGRNClose = () => {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(239, 68, 68, 0.5);
+}
+
+/* Add new styles for form components */
+.form-input {
+  @apply w-full px-4 py-2 bg-gray-800 rounded-lg border border-gray-600 focus:ring-2 focus:ring-opacity-50 focus:outline-none text-white;
+}
+
+.form-field {
+  @apply space-y-1;
+}
+
+.form-label {
+  @apply block text-sm font-medium text-gray-300 mb-1;
+}
+
+.btn-primary {
+  @apply px-4 py-2 text-white rounded-lg transition-all duration-200 shadow-lg shadow-black/20 flex items-center justify-center font-medium focus:ring-2 focus:ring-offset-1 focus:ring-offset-gray-800 focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center font-medium;
+}
+
+.form-slide-enter-active,
+.form-slide-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.form-slide-enter-from {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.form-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-30px);
 }
 </style>

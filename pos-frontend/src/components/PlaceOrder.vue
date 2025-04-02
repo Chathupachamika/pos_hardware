@@ -132,7 +132,7 @@ const fetchProducts = async () => {
         const inventoryResponse = await connection.get(`/inventory/${product.inventory_id}`)
         return {
           ...product,
-          price: product.price - (product.price * (product.selling_discount / 100)), // Adjust price after selling discount
+          price: product.price, // Adjust price after selling discount
           stock: inventoryResponse.data.quantity
         }
       })
