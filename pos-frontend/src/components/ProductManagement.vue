@@ -496,9 +496,7 @@ const handleEditProduct = async () => {
                 timer: 1500,
                 background: '#1e293b',
                 color: '#ffffff'
-            }).then(() => {
-                location.reload(); // Refresh the page after updating a product
-            });
+            })
         } else {
             throw new Error(response.data.message || 'Failed to update product')
         }
