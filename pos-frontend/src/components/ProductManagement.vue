@@ -44,7 +44,7 @@ const newProduct = ref({
     name: '',
     price: '',
     seller_price: '',
-    discount: '', // Normal discount
+    discount: '', 
     selling_discount: '', // Add this line for selling discount
     tax: '',
     size: '',
