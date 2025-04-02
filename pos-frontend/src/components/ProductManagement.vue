@@ -254,7 +254,7 @@ const resetFilters = () => {
 }
 
 const handleAddSubmit = () => {
-    // Mark all required fields as touched
+  
     const requiredFields = ['name', 'description', 'price', 'seller_price']
     requiredFields.forEach(field => markFieldAsTouched(field))
 
