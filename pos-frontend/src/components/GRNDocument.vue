@@ -95,26 +95,34 @@ const supplierInfo = computed(() => ({
 const productDetails = computed(() => ({
   name: props.productData?.name || 'N/A',
   description: props.productData?.description || 'N/A',
-  quantity: props.productData?.quantity || 0,
-  price: props.productData?.price || 0,
+  quantity: Number(props.productData?.quantity) || 0,
+  price: Number(props.productData?.price) || 0,
   brand_name: props.productData?.brand_name || 'N/A',
   size: props.productData?.size || 'N/A',
   color: props.productData?.color || 'N/A',
   bar_code: props.productData?.bar_code || 'N/A',
-  seller_price: props.productData?.seller_price || 0,
-  discount: props.productData?.discount || 0,
-  selling_discount: props.productData?.selling_discount || 0,
-  tax: props.productData?.tax || 0
+  seller_price: Number(props.productData?.seller_price) || 0,
+  discount: Number(props.productData?.discount) || 0,
+  selling_discount: Number(props.productData?.selling_discount) || 0,
+  tax: Number(props.productData?.tax) || 0
 }));
 
 // Add computed for subtotal amount
 const subtotalAmount = computed(() => {
-  return productDetails.value.quantity * productDetails.value.price;
+  const quantity = Number(productDetails.value.quantity);
+  const price = Number(productDetails.value.price);
+  return quantity * price;
+});
+
+// Add computed for discount amount
+const discountAmount = computed(() => {
+  return (subtotalAmount.value * (productDetails.value.discount / 100)) || 0;
 });
 
 // Add computed for tax amount
 const taxAmount = computed(() => {
-  return (subtotalAmount.value * (productDetails.value.tax / 100));
+  const afterDiscount = subtotalAmount.value - discountAmount.value;
+  return (afterDiscount * (productDetails.value.tax / 100)) || 0;
 });
 
 // Add ref for shipping amount
@@ -123,13 +131,11 @@ const shippingAmount = ref(0); // You can make this dynamic if needed
 // Add computed for total amount
 const totalAmount = computed(() => {
   const subtotal = subtotalAmount.value;
+  const discount = discountAmount.value;
   const tax = taxAmount.value;
-  const shipping = shippingAmount.value;
+  const shipping = Number(shippingAmount.value);
   
-  // Calculate discounts if any
-  const discount = (subtotal * (productDetails.value.discount / 100)) || 0;
-  
-  return subtotal + tax + shipping - discount;
+  return subtotal - discount + tax + shipping;
 });
 </script>
 
@@ -324,7 +330,7 @@ const totalAmount = computed(() => {
                     Rs. {{ Number(productDetails.price).toFixed(2) }}
                   </td>
                   <td class="p-4 text-right font-semibold text-gray-800">
-                    Rs. {{ Number(totalAmount.value).toFixed(2) }}
+                    Rs. {{ Number(productDetails.price * productDetails.quantity).toFixed(2) }}
                   </td>
                 </tr>
               </tbody>
@@ -332,31 +338,31 @@ const totalAmount = computed(() => {
                 <tr class="bg-gray-50">
                   <td colspan="3" class="p-4 text-right font-medium text-gray-600">Subtotal:</td>
                   <td colspan="2" class="p-4 text-right font-semibold text-gray-800">
-                    Rs. {{ Number(subtotalAmount.value).toFixed(2) }}
+                    Rs. {{ subtotalAmount.toFixed(2) }}
                   </td>
                 </tr>
                 <tr class="bg-gray-50" v-if="productDetails.discount > 0">
                   <td colspan="3" class="p-4 text-right font-medium text-gray-600">Discount ({{ productDetails.discount }}%):</td>
                   <td colspan="2" class="p-4 text-right font-semibold text-red-600">
-                    - Rs. {{ Number((subtotalAmount.value * (productDetails.discount / 100))).toFixed(2) }}
+                    - Rs. {{ discountAmount.toFixed(2) }}
                   </td>
                 </tr>
-                <tr class="bg-gray-50">
+                <tr class="bg-gray-50" v-if="productDetails.tax > 0">
                   <td colspan="3" class="p-4 text-right font-medium text-gray-600">Tax ({{ productDetails.tax }}%):</td>
                   <td colspan="2" class="p-4 text-right font-semibold text-gray-800">
-                    Rs. {{ Number(taxAmount.value).toFixed(2) }}
+                    Rs. {{ taxAmount.toFixed(2) }}
                   </td>
                 </tr>
-                <tr class="bg-gray-50" v-if="shippingAmount.value > 0">
+                <tr class="bg-gray-50" v-if="shippingAmount > 0">
                   <td colspan="3" class="p-4 text-right font-medium text-gray-600">Shipping:</td>
                   <td colspan="2" class="p-4 text-right font-semibold text-gray-800">
-                    Rs. {{ Number(shippingAmount.value).toFixed(2) }}
+                    Rs. {{ Number(shippingAmount).toFixed(2) }}
                   </td>
                 </tr>
                 <tr class="bg-blue-50">
                   <td colspan="3" class="p-4 text-right font-bold text-gray-800">Total:</td>
                   <td colspan="2" class="p-4 text-right font-bold text-blue-700 text-lg">
-                    Rs. {{ Number(totalAmount.value).toFixed(2) }}
+                    Rs. {{ totalAmount.toFixed(2) }}
                   </td>
                 </tr>
               </tfoot>
