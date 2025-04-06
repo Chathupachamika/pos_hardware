@@ -56,7 +56,7 @@ class CustomerController extends Controller
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
-            // Return a generic error message
+           
             return response()->json([
                 'message' => 'An error occurred while saving the customer.',
                 'errors' => $th->getMessage()
