@@ -20,7 +20,7 @@ class CustomerController extends Controller
         log($customers);
 
         return response()->json([
-            'data' => $customers->items(), // The paginated items
+            'data' => $customers->items(), 
             'current_page' => $customers->currentPage(),
             'per_page' => $customers->perPage(),
             'total' => $customers->total(),
