@@ -32,7 +32,7 @@ class CustomerController extends Controller
 
     public function store(Request $request)
     {
-        // Validate the incoming request
+        
         try {
             $validatedAttributes = $request->validate([
                 'name' => 'required|string|max:255',
