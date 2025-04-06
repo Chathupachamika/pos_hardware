@@ -71,7 +71,7 @@ class CustomerController extends Controller
 
     public function show($id)
     {
-        // search customer
+       
         $existingCustomer = Customer::with('contact')->find($id);
         if (!$existingCustomer) {
             return response()->json([
