@@ -15,7 +15,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        // Fetch all customers
+        
         $customers = Customer::with('contact')->paginate(10);
         log($customers);
 
