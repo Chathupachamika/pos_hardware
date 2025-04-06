@@ -47,7 +47,7 @@ class CustomerController extends Controller
             ], 422);
         }
 
-        // Create a new customer record
+        
         DB::beginTransaction();
         try {
             log($validatedAttributes);
