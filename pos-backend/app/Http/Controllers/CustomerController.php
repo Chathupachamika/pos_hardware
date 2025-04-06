@@ -40,7 +40,7 @@ class CustomerController extends Controller
                 'contact_number' => 'required|string|max:20',
             ]);
         } catch (ValidationException $th) {
-            // Return a custom response
+            
             return response()->json([
                 'message' => 'Validation failed',
                 'errors' => $th->errors()
