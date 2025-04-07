@@ -85,7 +85,7 @@ class InventoryController extends Controller
             $inventory->location = $validated['location'];
             $inventory->status = $validated['status'];
 
-            // Update restock info only if new stock is added
+            
             if (!empty($validated['added_stock_amount']) && $validated['added_stock_amount'] > 0) {
                 $inventory->restock_date_time = $validated['restock_date_time'];
                 $inventory->added_stock_amount = $validated['added_stock_amount'];
