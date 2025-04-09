@@ -80,7 +80,7 @@ const statusColor = computed(() => {
   }
 })
 
-// Generate a random reference number for the order
+
 const orderRef = `ORD-${Math.floor(10000 + Math.random() * 90000)}`
 
 // Add computed properties for supplier info with fallbacks
