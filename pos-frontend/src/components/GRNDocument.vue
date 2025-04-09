@@ -32,7 +32,7 @@ const isPrinting = ref(false)
 const currentStatus = ref('Received')
 
 watch(() => props.productData, (newData) => {
-  console.log('Product Data Updated:', newData); // Debugging to ensure data is received
+  console.log('Product Data Updated:', newData); // data is received
 });
 
 const generatePDF = () => {
