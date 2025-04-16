@@ -36,7 +36,6 @@ const showModal = ref(false)
 const showEditModal = ref(false)
 const showDeleteModal = ref(false)
 const showViewModal = ref(false)
-
 const newEmployee = ref({
     name: '',
     email: '',
