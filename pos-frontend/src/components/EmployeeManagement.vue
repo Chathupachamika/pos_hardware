@@ -274,7 +274,6 @@ const openDeleteModal = (employee) => {
 }
 
 const searchQuery = ref('')
-
 const filteredEmployees = computed(() => {
     const searchTerms = searchQuery.value.toLowerCase().split(' ')
     return employees.value.filter(employee => {
