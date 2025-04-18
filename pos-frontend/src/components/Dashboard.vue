@@ -16,7 +16,6 @@ import { Doughnut } from "vue-chartjs";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
 const isSidebarVisible = ref(false);
 const dashboardStore = useDashboardStore()
 const { dashboardStats, chartData, recentTransactions, isLoading } = storeToRefs(dashboardStore)
