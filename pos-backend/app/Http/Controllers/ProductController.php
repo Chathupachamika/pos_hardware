@@ -56,7 +56,7 @@ class ProductController extends Controller
                 'size' => 'required|string',
                 'color' => 'required|string',
                 'description' => 'required|string',
-                'bar_code' => 'required|string|unique:products',
+                'bar_code' => 'string|unique:products',
                 'inventory_id' => 'required|exists:inventories,id',
                 'admin_id' => 'required|exists:admins,id',
                 'calculate_length' => 'sometimes|boolean', // Ensure calculate_length is validated

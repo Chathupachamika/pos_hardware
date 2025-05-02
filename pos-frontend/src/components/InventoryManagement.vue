@@ -1573,7 +1573,7 @@ const FormLabel = {
                     </FormField>
                     <FormField>
                       <FormLabel>Bar Code</FormLabel>
-                      <input v-model="newProduct.bar_code" type="text" class="form-input" required />
+                      <input v-model="newProduct.bar_code" type="text" class="form-input"  />
                     </FormField>
                   </div>
                   <div class="flex justify-end space-x-3 mt-6">
