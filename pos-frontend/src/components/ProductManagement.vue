@@ -820,11 +820,6 @@ onUnmounted(() => {
                                 class="w-full px-4 py-2 bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-700 pl-10">
                             <MagnifyingGlassIcon class="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
                         </div>
-                        <button @click="showModal = true"
-                            class="px-4 py-2 bg-blue-600 rounded-md hover:bg-blue-700 font-medium inline-flex items-center transition-colors w-full md:w-auto justify-center">
-                            <PlusIcon class="w-5 h-5 mr-2" />
-                            Add Product
-                        </button>
                     </div>
                 </div>
 
